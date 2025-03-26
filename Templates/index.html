@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <title>Vārdu Meistars</title>
+</head>
+<body>
+    <h1>Vārdu Meistars</h1>
+    <form id="word-form">
+        <label>Burtu kopums:<br><input type="text" id="letters"></label><br>
+        <label>Vārda forma (piem. _a_i_):<br><input type="text" id="pattern"></label><br>
+        <button type="submit">Meklēt vārdus</button>
+    </form>
+    <ul id="results"></ul>
+
+    <script>
+        const form = document.getElementById("word-form");
+        const resultsList = document.getElementById("results");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const letters = document.getElementById("letters").value;
+            const pattern = document.getElementById("pattern").value;
+
+            const response = await fetch("/find", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ letters, pattern })
+            });
+
+            const words = await response.json();
+            resultsList.innerHTML = words.map(w => `<li>${w}</li>`).join("");
+        });
+    </script>
+</body>
+</html>
