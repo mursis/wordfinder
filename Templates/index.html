@@ -3,24 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <title>Vārdu Meistars</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 10px;
+            margin: 5px 0 15px 0;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #pattern-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .letter-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .letter-box input {
+            width: 40px;
+            text-align: center;
+            font-size: 18px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #results {
+            margin-top: 30px;
+        }
+        #results li {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+    </style>
 </head>
 <body>
     <h1>Vārdu Meistars</h1>
     <form id="word-form">
-        <label>Burtu kopums:<br><input type="text" id="letters"></label><br>
-        <label>Vārda forma (piem. _a_i_):<br><input type="text" id="pattern"></label><br>
+        <label>Burtu kopums:</label><br>
+        <input type="text" id="letters" placeholder="piemēram: alite"><br>
+
+        <label>Vārda garums (burti):</label><br>
+        <input type="number" id="word-length" min="1" max="20"><br>
+
+        <div id="pattern-container"></div>
+
         <button type="submit">Meklēt vārdus</button>
     </form>
+
     <ul id="results"></ul>
 
     <script>
         const form = document.getElementById("word-form");
+        const lettersInput = document.getElementById("letters");
+        const lengthInput = document.getElementById("word-length");
+        const patternContainer = document.getElementById("pattern-container");
         const resultsList = document.getElementById("results");
+
+        lengthInput.addEventListener("input", () => {
+            patternContainer.innerHTML = "";
+            const length = parseInt(lengthInput.value);
+            if (!isNaN(length) && length > 0) {
+                for (let i = 0; i < length; i++) {
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "letter-box";
+                    
+                    const label = document.createElement("label");
+                    label.textContent = i + 1;
+                    const input = document.createElement("input");
+                    input.type = "text";
+                    input.maxLength = 1;
+                    input.dataset.index = i;
+
+                    wrapper.appendChild(label);
+                    wrapper.appendChild(input);
+                    patternContainer.appendChild(wrapper);
+                }
+            }
+        });
 
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const letters = document.getElementById("letters").value;
-            const pattern = document.getElementById("pattern").value;
+            const letters = lettersInput.value.toLowerCase();
+            const inputs = patternContainer.querySelectorAll("input");
+            let pattern = "";
+
+            inputs.forEach(input => {
+                const val = input.value.toLowerCase();
+                pattern += val && val.match(/[a-zāčēģīķļņōŗšūž]/i) ? val : "_";
+            });
 
             const response = await fetch("/find", {
                 method: "POST",
@@ -29,7 +122,9 @@
             });
 
             const words = await response.json();
-            resultsList.innerHTML = words.map(w => `<li>${w}</li>`).join("");
+            resultsList.innerHTML = words.length > 0
+                ? words.map(w => `<li>${w}</li>`).join("")
+                : "<li>Nekas netika atrasts.</li>";
         });
     </script>
 </body>
